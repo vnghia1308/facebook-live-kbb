@@ -1,6 +1,6 @@
 # facebook-live-kbb
 Facebook Live KBB (Keo Bua Bao aka One Two Three)
-[![Demo Facebook Live KBB](https://nghia.org/fb-live/help/image/demo.png)]()
+[![Demo Facebook Live KBB](https://nghia.org/fb-live/help/image/demo.png)](https://github.com/vnghia1308/facebook-live-kbb)
 
 # Setup
 1. Set your app id to server
