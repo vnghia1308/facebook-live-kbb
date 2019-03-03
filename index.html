@@ -1,0 +1,271 @@
+<!-- Theme/Desgin: Bootstrap / Code by Vy Nghia -->
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Live Comments</title>
+	<script src="https://www.google.com/recaptcha/api.js?hl=vi"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="css/home.css">
+	
+	<!-- Plugin Libs -->
+	<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+	<script src="js/tingle.min.js"></script>
+
+	<!-- Our Libs-->
+	<script src="js/utilities.js" type="text/javascript"></script>
+	<script src="js/facebookController.js" type="text/javascript"></script>
+	<script src="js/liveStateController.js" type="text/javascript"></script>
+	<script src="js/liveApp.js" type="text/javascript"></script>
+</head>
+<body>
+<div class="container" id="main">
+	<div class="container"></div>
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					<h3 class="panel-title"><span id="title">{server.status.title}</span></h3>
+				</div>
+				<div class="panel-body">
+				
+				<!--<div class="form-group" id="select-live-streams">
+					<label for="fb-live-streams" class="col-sm-4 control-label">Select Live Stream</label>
+					<div class="col-sm-8">
+						<select class="form-control" id="fb-live-streams">
+						</select>
+					</div>
+					<div id="no-stream" class="hidden alert alert-danger">
+						Could not find any current live streams for this user.
+						Please start a live stream then re-load page.
+					</div>
+				</div>-->
+				
+				<div class="col-sm-1">
+				<div class="thumbnail">
+				<img class="img-responsive user-photo" id="user1-profile-picture" src="https://graph.facebook.com/109925643089996/picture?type=large&redirect=true&width=80&height=80">
+				</div><!-- /thumbnail -->
+				</div><!-- /col-sm-1 -->
+
+				<div class="col-sm-5">
+				<div class="panel panel-default">
+				<div class="panel-heading">
+				<strong><span id="user1-comment-name">Player 1</span></strong> <!--<span class="text-muted">commented 5 days ago</span>-->
+				</div>
+				<div class="panel-body">
+				<span id="user1-comment-content">Kéo/Búa/Bao?</span>
+				</div><!-- /panel-body -->
+				</div><!-- /panel panel-default -->
+				</div><!-- /col-sm-5 -->
+				
+				<div class="col-sm-1">
+				<div class="thumbnail">
+				<img class="img-responsive user-photo" id="user2-profile-picture" src="https://graph.facebook.com/109925643089996/picture?type=large&redirect=true&width=80&height=80">
+				</div><!-- /thumbnail -->
+				</div><!-- /col-sm-1 -->
+
+				<div class="col-sm-5">
+				<div class="panel panel-default">
+				<div class="panel-heading">
+				<strong><span id="user2-comment-name">Player 2</span></strong>
+				</div>
+				<div class="panel-body">
+				<span id="user2-comment-content">Kéo/Búa/Bao?</span>
+				</div><!-- /panel-body -->
+				</div><!-- /panel panel-default -->
+				</div><!-- /col-sm-5 -->
+				
+				<span id="status">Đang chờ 2 người chơi...</span>
+				
+				</div>
+				
+				<div class="panel-footer">
+				<i class="fa fa-code"></i> Code with <span class="fa fa-heart"></span> by <strong><a href="https://www.facebook.com/nghiadev?ref=product-on-nghia.org" target="_blank">Vy Nghia</a></strong><br/>
+				<!--Join <strong><a href="https://www.facebook.com/groups/photoshopplease/?ref=product-on-nghia.org">Photoshop for me</a></strong> to follow my products.
+				</div>-->
+				</div>
+			</div>
+
+	        <div class="row">
+	        	<!-- rank example -->
+	        	<span id="user-rank-example" style="display: none">
+					
+				</span>
+
+		        <div class="col-sm-12">
+		          <div class="panel panel-primary">
+		            <div class="panel-heading">
+		              <h3 class="panel-title"><span class="glyphicon glyphicon-stats" aria-hidden="true"></span> Top 10 người chơi</h3>
+		            </div>
+		            <table id="table-user-rank" class="table table-bordered table-hover table-striped" style="display: none">
+		              
+		            </table>
+
+			        <div class="panel-body" id="rank-null">Chưa có xếp hạng...</div>
+					</div>
+		        </div>
+      		</div>
+			</div>
+		</div>
+	</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script>
+/** 
+>_ Code by Vy Nghia
+@Credit: https://github.com/jekelija/FacebookCommentDisplay (API + Library)
+**/
+const FB_APP_ID = "553766941703252"; //set app id
+
+var first = false, matching = false, comments = [], rank = [], player = [];
+var kbb = ["Kéo", "Búa", "Bao", "Bao", "Kéo", "Búa", "Búa", "Bao", "Kéo", "Kéo", "Búa", "Bao", "Kéo", "Kéo", "Búa", "Búa", "Bao", "Bao"];
+
+function add_player(e){
+	var exists = false;
+	if(player.length > 0){
+		for(var i = 0; i <= player.length - 1; i++){
+			if(player[i][1].includes(e[1])){
+				exists = true;
+
+				break;
+			}
+		}
+
+		if(!exists){
+			player.push(e);
+		}
+	} else {
+		player.push(e);
+	}
+	
+	if(!matching && player.length >= 2)
+		matchingPlayer();
+}
+
+function loopMatching(){
+	if(!matching && player.length >= 2)
+		matchingPlayer();
+}
+
+function matchingPlayer(){
+	console.log("matching starting...")
+	$("#status").html("Đang quyết định...")
+	matching = true;
+	var n1 = player[0];
+	var n2 = player[1];
+	
+	//player 1
+	$("#user1-profile-picture").attr("src", "https://graph.facebook.com/" + n1[1] + "/picture?type=large&redirect=true&width=80&height=80")
+	$("#user1-comment-name").html(n1[0]);
+	
+	
+	//player 2
+	$("#user2-profile-picture").attr("src", "https://graph.facebook.com/" + n2[1] + "/picture?type=large&redirect=true&width=80&height=80")
+	$("#user2-comment-name").html(n2[0]);
+	
+	var o = 0;
+	for(var i = 0; i <= 30; i++){
+		setTimeout(function(){
+			rdN1 = Math.floor(Math.random() * (kbb.length - 1));
+			rdN2 = Math.floor(Math.random() * (kbb.length - 1));
+			
+			$("#user1-comment-content").html(kbb[rdN1].toString());
+			$("#user2-comment-content").html(kbb[rdN2].toString());
+			
+			o++;
+			if(o === 31){
+				endMatching(player[0], player[1]);
+			}
+		}, 200*i, i);
+	}
+}
+
+function endMatching(n1, n2){
+	player.splice(player.indexOf(n1[1]), 1); 
+	player.splice(player.indexOf(n2[1]), 1);
+	
+	console.log("matching finished")
+	
+	
+	var rsN1 = $("#user1-comment-content").html()
+	var rsN2 = $("#user2-comment-content").html()
+	
+	
+	if(rsN1 === "Kéo" && rsN2 === "Kéo" || rsN1 === "Búa" && rsN2 === "Búa" || rsN1 === "Bao" && rsN2 === "Bao"){
+		$("#status").html("2 bạn hòa nhau")
+	} else if(rsN1 === "Kéo" && rsN2 === "Bao" || rsN1 === "Bao" && rsN2 === "Búa" || rsN1 === "Búa" && rsN2 === "Kéo"){
+		$("#status").html("<strong>" + n1[0] + "</strong> thắng!")
+		setRank(n1[0], n1[1]);
+		
+	} else if(rsN1 === "Kéo" && rsN2 === "Búa" || rsN1 === "Bao" && rsN2 === "Kéo" || rsN1 === "Búa" && rsN2 === "Bao"){
+		$("#status").html("<strong>" + n2[0] + "</strong> thắng!")
+		setRank(n2[0], n2[1]);
+	}
+	
+	setTimeout(function(){
+		matching = false;
+	}, 1000);
+}
+
+function setRank(name, id) {
+	var exists = false, index = 0;
+	if(rank.length > 0){
+	  	for(i = 0; i <= rank.length - 1; i++){
+			if(rank[i].includes(id)){
+				exists = true;
+				index = i;
+
+				break;
+			}
+	  	}
+
+	  	if(exists) {
+			if(rank[index][0] == id)
+				rank[index][2] = rank[index][2] += 1;
+		} else {
+			rank.push([id, name, 1]);
+		}
+	} else {
+		rank.push([id, name, 1]);
+	}
+
+	reloadRank();
+}
+
+function reloadRank(){
+	rank = rank.sort(Comparator)
+	var rankBody = '<thead>' +
+		                '<tr class="bg-info">' +
+		                  '<th class="text-center">#</th>' +
+		                  '<th class="text-center">Người chơi</th>' +
+		                  '<th class="text-center">Điểm</th>' +
+		                '</tr>' +
+		              '</thead>';
+	var rankTemp = '<tbody>' +
+						'<td><center>{rank.player.rating}</center></td>' +
+						'<td><img class="avatar lazyload" src="https://graph.facebook.com/{rank.player.id}/picture?width=40&height=40" width="40px" height="40px"> {rank.player.name}</td>' +
+						'<td><center>{rank.player.point}</center></td>' +
+					'</tbody>';
+	var rankSource;
+
+	if(rank.length > 0){
+		for(i = 0; i <= rank.length - 1; i++){
+			rankSource += rankTemp.replace("{rank.player.rating}", i + 1).replace("{rank.player.id}", rank[i][0]).replace("{rank.player.name}", rank[i][1]).replace("{rank.player.point}", rank[i][2]);
+
+			if(i >= 10) break; 
+		}
+	}
+
+	rankBody = rankBody += rankSource.replace("undefined", "");
+
+	$("#table-user-rank").html(rankBody).show()
+	$("#rank-null").hide()
+}
+
+function Comparator(a, b) {
+   if (a[2] < b[2]) return 1;
+   if (a[2] > b[2]) return -1;
+   return 0;
+ }
+</script>
+</body>
+</html>
