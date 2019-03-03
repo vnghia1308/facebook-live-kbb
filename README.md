@@ -9,7 +9,10 @@ const FB_APP_ID = "553766941703252"; //set your app id (index.html line 122)
 ```
 2. Set permissions for your app
 [![Setup Permissions for Facebook App](https://nghia.org/fb-live/help/image/facebook.app.permissions.png)](https://developers.facebook.com/tools/explorer/)
----
+
+```
+Notice: Only support for PUBLIC (not friends or only me)
+```
 
 ## License
 * Code by Vy Nghia
